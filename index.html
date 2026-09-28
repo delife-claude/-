@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>コーキング検索くん</title>
+<title>コーキング検索くん オートン版</title>
 <style>
 :root{
   --bg:#eeece5;
@@ -356,6 +356,22 @@ footer{
   opacity:.7;
 }
 
+.brand .edition{
+  margin-left:8px;
+  font-size:11px;
+  font-weight:700;
+  color:var(--accent-ink);
+  background:var(--accent);
+  border-radius:6px;
+  padding:2px 7px;
+  vertical-align:3px;
+}
+footer .credit{
+  display:block;
+  margin-top:6px;
+  font-weight:700;
+  letter-spacing:.04em;
+}
 @media (max-width: 480px){
   .brand{flex-wrap:wrap}
   .brand h1{font-size:18px}
@@ -369,7 +385,7 @@ footer{
 
 <div class="topbar">
   <div class="brand">
-    <h1>コーキング<span class="kun">検索くん</span></h1>
+    <h1>コーキング<span class="kun">検索くん</span><span class="edition">オートン版</span></h1>
     <span class="tagline">サイディング品番 → オートン対応色番号</span>
   </div>
   <div class="searchbox">
@@ -397,7 +413,7 @@ footer{
   <div id="moreBar" class="morebar" hidden></div>
 </main>
 
-<footer>データ出典: オートンサイディングシーラント対応表（オート化学工業／2026年7月号）・12メーカー計 <span id="totalCount" class="mono"></span> 件</footer>
+<footer>データ出典: オートンサイディングシーラント対応表（オート化学工業／2026年7月号）・12メーカー計 <span id="totalCount" class="mono"></span> 件<span class="credit">作成者 DeLIFE</span></footer>
 
 <script>
 (function(){
