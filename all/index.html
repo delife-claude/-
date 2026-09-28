@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>コーキング検索くん 最新版</title>
+<style>
+:root{
+  --bg:#eeece5;
+  --surface:#ffffff;
+  --surface-2:#f5f3ec;
+  --ink:#26221d;
+  --sub:#716a5d;
+  --border:#ddd6c6;
+  --accent:#d9680f;
+  --accent-ink:#ffffff;
+  --accent-soft:#f7e3cf;
+  --good:#2f7d5e;
+  --good-soft:#e1efe7;
+  --bad:#b8462b;
+  --bad-soft:#fbe4dd;
+  --auton:#2d6fb3;
+  --auton-soft:#e2ecf7;
+  --sun:#c2410c;
+  --sun-soft:#fbe6d8;
+  --jun:#6b5b3e;
+  --jun-soft:#efe8da;
+  --shadow: 0 1px 2px rgba(38,34,29,.06), 0 6px 16px rgba(38,34,29,.05);
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#1c1a16; --surface:#242119; --surface-2:#2a271e; --ink:#efe9dd; --sub:#a89d89; --border:#3c362a;
+    --accent:#f0924b; --accent-ink:#231400; --accent-soft:#3a2a17;
+    --good:#5cbb90; --good-soft:#1e332a; --bad:#e8836a; --bad-soft:#3a241d;
+    --auton:#7fb2ea; --auton-soft:#1d2a3a; --sun:#f5a36b; --sun-soft:#3a2518; --jun:#d8c49a; --jun-soft:#332c1f;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 20px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#1c1a16; --surface:#242119; --surface-2:#2a271e; --ink:#efe9dd; --sub:#a89d89; --border:#3c362a;
+  --accent:#f0924b; --accent-ink:#231400; --accent-soft:#3a2a17;
+  --good:#5cbb90; --good-soft:#1e332a; --bad:#e8836a; --bad-soft:#3a241d;
+  --auton:#7fb2ea; --auton-soft:#1d2a3a; --sun:#f5a36b; --sun-soft:#3a2518; --jun:#d8c49a; --jun-soft:#332c1f;
+  --shadow: 0 1px 2px rgba(0,0,0,.35), 0 8px 20px rgba(0,0,0,.35);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif;
+  padding-inline:16px;
+  padding-block:0 28px;
+}
+.mono{font-family:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace; font-variant-numeric:tabular-nums}
+.wrap{max-width:760px; margin-inline:auto}
+
+/* ---------- header ---------- */
+.topbar{
+  position:sticky; top:0; z-index:10;
+  background:var(--bg);
+  margin-inline:-16px; padding:14px 16px 12px;
+  border-bottom:1px solid var(--border);
+}
+.brand{display:flex; align-items:baseline; gap:10px; margin-bottom:12px; flex-wrap:wrap}
+.brand h1{font-size:20px; font-weight:900; margin:0; white-space:nowrap}
+.brand .kun{color:var(--accent)}
+.edition{
+  margin-left:8px; font-size:11px; font-weight:700;
+  color:var(--accent-ink); background:var(--accent);
+  border-radius:6px; padding:2px 7px; vertical-align:3px;
+}
+.tagline{font-size:12px; color:var(--sub)}
+
+.searchbox{
+  display:flex; align-items:center;
+  background:var(--surface);
+  border:2px solid var(--border);
+  border-radius:14px;
+  box-shadow:var(--shadow);
+}
+.searchbox:focus-within{border-color:var(--accent)}
+.searchbox svg{flex:none; margin-inline:14px; color:var(--sub)}
+#q{
+  flex:1; min-width:0;
+  border:none; outline:none; background:transparent; color:var(--ink);
+  font-family:"JetBrains Mono","Zen Kaku Gothic New",monospace;
+  font-size:18px; font-weight:700; letter-spacing:.02em;
+  padding-block:14px; padding-inline-end:8px;
+}
+#q::placeholder{color:var(--sub); font-weight:400; font-size:15px; font-family:inherit}
+#clearBtn{flex:none; border:none; background:none; color:var(--sub); cursor:pointer; padding:8px 14px; font-size:13px}
+#clearBtn[hidden]{display:none!important}
+
+/* ---------- main ---------- */
+main{padding-top:16px}
+.status{color:var(--sub); font-size:13.5px; padding:4px 2px 14px; line-height:1.7}
+.status b{color:var(--ink)}
+
+.srcs{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-bottom:18px}
+.srcs[hidden]{display:none}
+.src{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  padding:12px 14px; box-shadow:var(--shadow); border-top:4px solid var(--c);
+}
+.src .num{font-family:"JetBrains Mono",monospace; font-size:22px; font-weight:700; color:var(--c)}
+.src .lbl{font-size:12px; color:var(--sub); font-weight:700}
+.src .ver{font-size:11px; color:var(--sub); margin-top:2px}
+
+#meta{font-size:12.5px; color:var(--sub); padding:0 2px 8px; display:flex; justify-content:space-between}
+#meta b{color:var(--ink); font-family:"JetBrains Mono",monospace}
+#results{display:flex; flex-direction:column; gap:12px}
+
+.card{
+  background:var(--surface); border:1px solid var(--border); border-radius:var(--radius);
+  box-shadow:var(--shadow); overflow:hidden;
+}
+.card-head{padding:12px 16px 10px; border-bottom:1px solid var(--border); background:var(--surface-2)}
+.card-head .code{font-family:"JetBrains Mono",monospace; font-size:20px; font-weight:800; letter-spacing:.02em}
+.card-head .code mark{background:var(--accent-soft); color:inherit; border-radius:3px}
+.card-head .sub{display:flex; gap:6px 12px; flex-wrap:wrap; align-items:center; margin-top:4px; font-size:13px; color:var(--sub)}
+.maker{
+  font-size:11px; font-weight:700; color:var(--sub);
+  border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:1px 7px;
+}
+.board{font-weight:700; color:var(--ink)}
+
+.sec{display:grid; grid-template-columns:92px minmax(0,1fr); border-bottom:1px solid var(--border)}
+.sec:last-child{border-bottom:none}
+.sec-label{
+  padding:12px 10px 12px 16px;
+  font-size:13px; font-weight:900; color:var(--c);
+  background:var(--cs);
+  display:flex; flex-direction:column; gap:2px;
+}
+.sec-label small{font-size:10.5px; font-weight:700; opacity:.8}
+.sec-body{padding:10px 14px; display:flex; flex-direction:column; gap:8px; min-width:0}
+.none{color:var(--sub); font-size:13px}
+.variant + .variant{border-top:1px dashed var(--border); padding-top:8px}
+.kind{font-size:11.5px; color:var(--sub); margin-bottom:4px; overflow-wrap:anywhere}
+
+.auton-row{display:flex; align-items:center; gap:8px 10px; flex-wrap:wrap}
+.cname{font-size:16px; font-weight:800}
+.cno{
+  font-family:"JetBrains Mono",monospace; font-weight:800; font-size:14px;
+  color:#fff; background:var(--auton); border-radius:6px; padding:1px 9px;
+}
+.pill{display:inline-flex; font-size:11px; font-weight:700; padding:2px 8px; border-radius:999px; white-space:nowrap}
+.pill.ok{color:var(--good); background:var(--good-soft)}
+.pill.ng{color:var(--bad); background:var(--bad-soft)}
+.pill.info{color:var(--sub); background:var(--surface-2); border:1px solid var(--border)}
+.pill.warn{color:var(--bad); background:var(--bad-soft)}
+
+.seal-grid{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px}
+.seal{background:var(--surface-2); border:1px solid var(--border); border-radius:8px; padding:6px 8px; min-width:0; display:flex; flex-direction:column; gap:2px}
+.seal .k{font-size:10.5px; color:var(--sub); font-weight:700}
+.seal .v{font-size:14px; font-weight:800; overflow-wrap:anywhere}
+.seal .v.na{color:var(--sub); font-weight:400; font-size:12.5px}
+.tone{align-self:flex-start; font-size:10.5px; font-weight:700; color:var(--sun); background:var(--sun-soft); border-radius:999px; padding:1px 7px}
+
+.jcode{font-family:"JetBrains Mono",monospace; font-size:17px; font-weight:800; letter-spacing:.02em}
+
+.empty{text-align:center; color:var(--sub); font-size:14px; padding:40px 12px; line-height:1.8}
+.more{text-align:center; color:var(--sub); font-size:12.5px; padding:14px 4px 4px}
+
+footer{text-align:center; color:var(--sub); font-size:11px; padding-top:28px; opacity:.8; line-height:1.8}
+footer .credit{display:block; margin-top:4px; font-weight:700; letter-spacing:.04em}
+
+@media (max-width:480px){
+  .brand h1{font-size:18px}
+  .sec{grid-template-columns:1fr}
+  .sec-label{flex-direction:row; align-items:baseline; gap:8px; padding:7px 14px}
+  .srcs{gap:6px}
+  .src{padding:10px}
+  .src .num{font-size:18px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="topbar">
+  <div class="brand">
+    <h1>コーキング<span class="kun">検索くん</span><span class="edition">最新版</span></h1>
+    <span class="tagline">品番ひとつで オートン・サンライズ・純正 をまとめて表示</span>
+  </div>
+  <div class="searchbox">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input id="q" type="text" inputmode="search" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="サイディング品番を入力（例: NH5792A）" aria-label="サイディング品番" disabled>
+    <button id="clearBtn" type="button" hidden>消去</button>
+  </div>
+</div>
+
+<main>
+  <div class="status" id="status">データを読み込んでいます…</div>
+  <div class="srcs" id="srcs" hidden>
+    <div class="src" style="--c:var(--auton)"><div class="num" id="nA">-</div><div class="lbl">オートン</div><div class="ver">2026年7月号</div></div>
+    <div class="src" style="--c:var(--sun)"><div class="num" id="nS">-</div><div class="lbl">サンライズ</div><div class="ver">2024.06.12版</div></div>
+    <div class="src" style="--c:var(--jun)"><div class="num" id="nJ">-</div><div class="lbl">純正シーリング</div><div class="ver">サンライズ表に記載</div></div>
+  </div>
+  <div id="meta" hidden></div>
+  <div id="results"></div>
+  <div class="more" id="more" hidden></div>
+</main>
+
+<footer>
+  データ出典: オートンサイディングシーラント対応表（オート化学工業／2026年7月号）／サイディング用 SDC・SRシールS70 色調対応表（2024.06.12版）
+  <span class="credit">作成者 DeLIFE</span>
+</footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var MAX_GROUPS = 60;
+  // 各版のページに埋め込まれたデータを読み込む（そちらを更新すればこのページも自動で最新になる）
+  var SOURCES = { auton: '../', sunrise: '../sunrise/' };
+
+  var zen2han = {
+    'ガ':'ｶﾞ','ギ':'ｷﾞ','グ':'ｸﾞ','ゲ':'ｹﾞ','ゴ':'ｺﾞ','ザ':'ｻﾞ','ジ':'ｼﾞ','ズ':'ｽﾞ','ゼ':'ｾﾞ','ゾ':'ｿﾞ',
+    'ダ':'ﾀﾞ','ヂ':'ﾁﾞ','ヅ':'ﾂﾞ','デ':'ﾃﾞ','ド':'ﾄﾞ','バ':'ﾊﾞ','ビ':'ﾋﾞ','ブ':'ﾌﾞ','ベ':'ﾍﾞ','ボ':'ﾎﾞ',
+    'パ':'ﾊﾟ','ピ':'ﾋﾟ','プ':'ﾌﾟ','ペ':'ﾍﾟ','ポ':'ﾎﾟ','ヴ':'ｳﾞ',
+    'ア':'ｱ','イ':'ｲ','ウ':'ｳ','エ':'ｴ','オ':'ｵ','カ':'ｶ','キ':'ｷ','ク':'ｸ','ケ':'ｹ','コ':'ｺ',
+    'サ':'ｻ','シ':'ｼ','ス':'ｽ','セ':'ｾ','ソ':'ｿ','タ':'ﾀ','チ':'ﾁ','ツ':'ﾂ','テ':'ﾃ','ト':'ﾄ',
+    'ナ':'ﾅ','ニ':'ﾆ','ヌ':'ﾇ','ネ':'ﾈ','ノ':'ﾉ','ハ':'ﾊ','ヒ':'ﾋ','フ':'ﾌ','ヘ':'ﾍ','ホ':'ﾎ',
+    'マ':'ﾏ','ミ':'ﾐ','ム':'ﾑ','メ':'ﾒ','モ':'ﾓ','ヤ':'ﾔ','ユ':'ﾕ','ヨ':'ﾖ',
+    'ラ':'ﾗ','リ':'ﾘ','ル':'ﾙ','レ':'ﾚ','ロ':'ﾛ','ワ':'ﾜ','ヲ':'ｦ','ン':'ﾝ',
+    'ァ':'ｧ','ィ':'ｨ','ゥ':'ｩ','ェ':'ｪ','ォ':'ｫ','ッ':'ｯ','ャ':'ｬ','ュ':'ｭ','ョ':'ｮ',
+    'ー':'ｰ','。':'｡','、':'､','・':'･','「':'｢','」':'｣','゛':'ﾞ','゜':'ﾟ'
+  };
+
+  function normalize(str){
+    if (!str) return '';
+    var s = String(str).replace(/[！-～]/g, function(ch){ return String.fromCharCode(ch.charCodeAt(0) - 0xFEE0); });
+    s = s.replace(/　/g, ' ');
+    var out = '';
+    for (var i = 0; i < s.length; i++){ out += zen2han[s[i]] || s[i]; }
+    return out.toLowerCase().trim();
+  }
+
+  // 品番の照合キー: 全角→半角・大文字小文字・空白・(受)(廃)などの記号を無視
+  function codeKey(c){
+    return normalize(c).replace(/[(（](受|廃予|廃|寒|限|休|在|納)[)）]/g, '').replace(/\s+/g, '');
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  var qInput = document.getElementById('q');
+  var clearBtn = document.getElementById('clearBtn');
+  var statusEl = document.getElementById('status');
+  var srcsEl = document.getElementById('srcs');
+  var metaEl = document.getElementById('meta');
+  var resultsEl = document.getElementById('results');
+  var moreEl = document.getElementById('more');
+
+  var GROUPS = [];   // {key, code, auton:[], sun:[], idx}
+
+  function loadData(url){
+    return fetch(url, {cache: 'no-cache'}).then(function(res){
+      if (!res.ok) throw new Error(url + ' ' + res.status);
+      return res.text();
+    }).then(function(html){
+      var doc = new DOMParser().parseFromString(html, 'text/html');
+      return JSON.parse(doc.getElementById('ck-data').textContent);
+    });
+  }
+
+  function build(auton, sun){
+    var map = Object.create(null);
+    function group(rec){
+      var k = codeKey(rec.c);
+      if (!k) return null;
+      if (!map[k]){ map[k] = {key:k, code:rec.c.replace(/[(（](受|廃予|廃|寒|限|休|在|納)[)）]/g, ''), auton:[], sun:[]}; GROUPS.push(map[k]); }
+      return map[k];
+    }
+    auton.forEach(function(r){ var g = group(r); if (g) g.auton.push(r); });
+    sun.forEach(function(r){ var g = group(r); if (g) g.sun.push(r); });
+    var nJ = 0;
+    GROUPS.forEach(function(g){
+      var parts = [g.key];
+      g.auton.forEach(function(r){ parts.push(r.m, r.s, r.a, r.n); });
+      g.sun.forEach(function(r){ parts.push(r.m, r.s, r.j, r.sdc, r.s70, r.h100, r.t); });
+      g.idx = normalize(parts.join(' '));
+      if (g.sun.some(function(r){ return r.j; })) nJ++;
+    });
+    document.getElementById('nA').textContent = auton.length.toLocaleString('ja-JP');
+    document.getElementById('nS').textContent = sun.length.toLocaleString('ja-JP');
+    document.getElementById('nJ').textContent = nJ.toLocaleString('ja-JP');
+  }
+
+  function highlight(code, term){
+    var i = normalize(code).replace(/\s+/g, '').indexOf(term);
+    if (!term || i < 0 || code.length !== normalize(code).replace(/\s+/g, '').length) return esc(code);
+    return esc(code.slice(0, i)) + '<mark>' + esc(code.slice(i, i + term.length)) + '</mark>' + esc(code.slice(i + term.length));
+  }
+
+  function availPill(label, v){
+    if (v === '○') return '<span class="pill ok">' + label + ' ○</span>';
+    if (v === '×') return '<span class="pill ng">' + label + ' ×</span>';
+    return '';
+  }
+
+  function autonHTML(list){
+    if (!list.length) return '<div class="none">この品番はオートン対応表に掲載がありません</div>';
+    return list.map(function(r){
+      if (r.a === '未対応'){
+        return '<div class="variant"><span class="pill warn">オートン対応色なし（未対応）</span></div>';
+      }
+      if (r.a === '検討予定'){
+        return '<div class="variant"><span class="pill info">対応色 検討予定</span></div>';
+      }
+      return '<div class="variant"><div class="auton-row">' +
+        '<span class="cname">' + esc(r.a) + '</span>' +
+        (r.n ? '<span class="cno">' + esc(r.n) + '</span>' : '') +
+        availPill('カート', r.k) + availPill('6L', r.l) +
+        (r.note ? '<span class="pill info">' + esc(r.note) + '</span>' : '') +
+      '</div></div>';
+    }).join('');
+  }
+
+  function sealCell(label, name, tone){
+    return '<div class="seal"><span class="k">' + label + '</span>' +
+      (name ? '<span class="v">' + esc(name) + '</span>' : '<span class="v na">設定なし</span>') +
+      (name && tone ? '<span class="tone">' + esc(tone) + '</span>' : '') + '</div>';
+  }
+
+  function sunHTML(list){
+    if (!list.length) return '<div class="none">この品番はサンライズ対応表に掲載がありません</div>';
+    return list.map(function(r){
+      return '<div class="variant">' +
+        (list.length > 1 && r.t ? '<div class="kind">' + esc(r.t) + '</div>' : '') +
+        '<div class="seal-grid">' +
+          sealCell('SDC', r.sdc, r.sdct) + sealCell('S70', r.s70, r.ht) + sealCell('H100', r.h100, r.ht) +
+        '</div></div>';
+    }).join('');
+  }
+
+  function junHTML(list){
+    var seen = {};
+    var js = [];
+    list.forEach(function(r){ if (r.j && !seen[r.j]){ seen[r.j] = 1; js.push(r); } });
+    if (!js.length) return '<div class="none">純正シーリングの記載がありません</div>';
+    return js.map(function(r){
+      return '<div class="variant">' +
+        (js.length > 1 && r.t ? '<div class="kind">' + esc(r.t) + '</div>' : '') +
+        '<span class="jcode">' + esc(r.j) + '</span></div>';
+    }).join('');
+  }
+
+  function uniq(arr){
+    var out = [];
+    arr.forEach(function(v){ if (v && out.indexOf(v) < 0) out.push(v); });
+    return out;
+  }
+
+  function cardHTML(g, term){
+    var makers = uniq(g.auton.map(function(r){ return r.m; }).concat(g.sun.map(function(r){ return r.m; })));
+    var boards = uniq(g.auton.map(function(r){ return r.s; }).concat(g.sun.map(function(r){ return r.s; })));
+    var kinds = uniq(g.sun.map(function(r){ return r.t; }));
+    return '<div class="card">' +
+      '<div class="card-head">' +
+        '<div class="code">' + highlight(g.code, term) + '</div>' +
+        '<div class="sub">' +
+          makers.map(function(m){ return '<span class="maker">' + esc(m) + '</span>'; }).join('') +
+          (boards.length ? '<span class="board">' + esc(boards.slice(0, 2).join(' ／ ')) + '</span>' : '') +
+          (kinds.length === 1 ? '<span>' + esc(kinds[0]) + '</span>' : '') +
+        '</div>' +
+      '</div>' +
+      '<div class="sec" style="--c:var(--auton);--cs:var(--auton-soft)"><div class="sec-label">オートン<small>2026年7月号</small></div><div class="sec-body">' + autonHTML(g.auton) + '</div></div>' +
+      '<div class="sec" style="--c:var(--sun);--cs:var(--sun-soft)"><div class="sec-label">サンライズ<small>2024.06.12版</small></div><div class="sec-body">' + sunHTML(g.sun) + '</div></div>' +
+      '<div class="sec" style="--c:var(--jun);--cs:var(--jun-soft)"><div class="sec-label">純正<small>シーリング品番</small></div><div class="sec-body">' + junHTML(g.sun) + '</div></div>' +
+    '</div>';
+  }
+
+  function render(){
+    var raw = qInput.value;
+    clearBtn.hidden = !raw;
+    var q = normalize(raw);
+    var terms = q.split(/\s+/).filter(Boolean);
+    if (!terms.length){
+      srcsEl.hidden = false; metaEl.hidden = true; moreEl.hidden = true;
+      resultsEl.innerHTML = '';
+      statusEl.innerHTML = '<b>サイディング品番</b>を入れると、<b>オートン</b>・<b>サンライズ</b>・<b>純正シーリング</b>の対応色をまとめて表示します。<br>色名やメーカー名でも探せます（例: <b>ブラック ニチハ</b>）。';
+      return;
+    }
+    srcsEl.hidden = true;
+    statusEl.innerHTML = '';
+
+    var codeTerm = terms.join('');
+    var scored = [];
+    for (var i = 0; i < GROUPS.length; i++){
+      var g = GROUPS[i];
+      var hit = true;
+      for (var j = 0; j < terms.length; j++){ if (g.idx.indexOf(terms[j]) === -1){ hit = false; break; } }
+      if (!hit && g.key.indexOf(codeTerm) === -1) continue;
+      // 並び順: 品番完全一致 → 前方一致 → 品番に含む → その他（色名などで一致）。同順位は3種類そろっている品番を先に
+      var rank = g.key === codeTerm ? 0 : g.key.indexOf(codeTerm) === 0 ? 1 : g.key.indexOf(codeTerm) > 0 ? 2 : 3;
+      var both = (g.auton.length ? 0 : 1) + (g.sun.length ? 0 : 1);
+      scored.push([rank, both, g.key.length, g]);
+    }
+    scored.sort(function(a, b){ return a[0] - b[0] || a[1] - b[1] || a[2] - b[2]; });
+
+    metaEl.hidden = false;
+    metaEl.innerHTML = '<span><b>' + scored.length.toLocaleString('ja-JP') + '</b> 品番ヒット</span>' +
+      (scored.length > MAX_GROUPS ? '<span>先頭 ' + MAX_GROUPS + ' 件を表示</span>' : '<span></span>');
+
+    if (!scored.length){
+      resultsEl.innerHTML = '<div class="empty">該当する品番が見つかりませんでした。<br>品番の一部（例: 先頭の数文字）だけでも検索できます。</div>';
+      moreEl.hidden = true;
+      return;
+    }
+    resultsEl.innerHTML = scored.slice(0, MAX_GROUPS).map(function(s){ return cardHTML(s[3], codeTerm); }).join('');
+    if (scored.length > MAX_GROUPS){
+      moreEl.hidden = false;
+      moreEl.textContent = '他 ' + (scored.length - MAX_GROUPS).toLocaleString('ja-JP') + ' 品番 — 品番をもう少し入力して絞り込んでください';
+    } else {
+      moreEl.hidden = true;
+    }
+  }
+
+  var t = null;
+  qInput.addEventListener('input', function(){ clearTimeout(t); t = setTimeout(render, 60); });
+  clearBtn.addEventListener('click', function(){ qInput.value = ''; qInput.focus(); render(); });
+
+  Promise.all([loadData(SOURCES.auton), loadData(SOURCES.sunrise)]).then(function(res){
+    build(res[0], res[1]);
+    qInput.disabled = false;
+    var m = location.hash.match(/^#q=(.+)$/);
+    if (m) qInput.value = decodeURIComponent(m[1]);
+    render();
+    if (!qInput.value) qInput.focus();
+  }).catch(function(err){
+    statusEl.textContent = 'データの読み込みに失敗しました。通信状態を確認して再読み込みしてください。（' + err.message + '）';
+  });
+})();
+</script>
+</body>
+</html>
